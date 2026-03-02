@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "AI Document Chat System",
   description: "Chat with your documents using AI",
   icons: {
-    icon: "/assets/icon.svg",
+    icon: "/favicon.svg",
   },
 };
 
