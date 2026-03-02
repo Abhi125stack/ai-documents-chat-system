@@ -1,14 +1,17 @@
 "use client";
 
+import { useState } from "react";
+
 import { useForm } from "react-hook-form";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { useAuth } from "@/shared/hooks/useAuth";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function LoginForm() {
     const { login, isLoggingIn } = useAuth();
     const { register, handleSubmit, formState: { errors } } = useForm();
+    const [showPassword, setShowPassword] = useState(false);
 
     const onSubmit = (data: any) => {
         login(data);
@@ -38,11 +41,18 @@ export default function LoginForm() {
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 </div>
                 <Input 
-                    type="password" 
+                    type={showPassword ? "text" : "password"}
                     placeholder="Enter your password" 
-                    className="h-14 pl-12 rounded-2xl bg-[#172539] border-slate-800 text-white placeholder:text-slate-500 focus:bg-[#0a1120] transition-all duration-300"
+                    className="h-14 pl-12 pr-12 rounded-2xl bg-[#172539] border-slate-800 text-white placeholder:text-slate-500 focus:bg-[#0a1120] transition-all duration-300"
                     {...register("password", { required: "Password is required" })}
                 />
+                <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white focus:outline-none transition-colors z-10"
+                >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
                 {errors.password && <span className="text-xs text-red-500 mt-1 pl-2">{(errors.password as any).message}</span>}
             </div>
 
