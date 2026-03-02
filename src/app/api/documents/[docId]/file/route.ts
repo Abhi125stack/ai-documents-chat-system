@@ -31,23 +31,30 @@ export async function GET(
             bucketName: "documents",
         });
 
-        // Check if file exists in GridFS
-        const files = await bucket.find({ _id: document.fileId }).toArray();
-        if (files.length === 0) {
+        // 1. Get exact file metadata from GridFS (essential for large files)
+        // This ensures we have the correct identifier and exact storage length
+        const fileId = new mongoose.Types.ObjectId(document.fileId.toString());
+        const fileMetadata = await db.collection("documents.files").findOne({ _id: fileId });
+
+        if (!fileMetadata) {
             return NextResponse.json({ message: "File data not found in storage.", success: false }, { status: 404 });
         }
 
-        const downloadStream = bucket.openDownloadStream(document.fileId);
+        const downloadStream = bucket.openDownloadStream(fileId);
 
-        // Convert the Node.js Readable stream to a Web ReadableStream with proper chunking
+        // 2. Convert to Web Stream with error propagation
         const webStream = new ReadableStream({
             start(controller) {
                 downloadStream.on("data", (chunk) => {
-                    // Buffer to Uint8Array for the Web Streams API
                     controller.enqueue(new Uint8Array(chunk));
                 });
-                downloadStream.on("end", () => controller.close());
-                downloadStream.on("error", (err) => controller.error(err));
+                downloadStream.on("end", () => {
+                    controller.close();
+                });
+                downloadStream.on("error", (err) => {
+                    console.error("🔴 Stream error for file:", document.fileId, err);
+                    controller.error(err);
+                });
             },
             cancel() {
                 downloadStream.destroy();
@@ -57,9 +64,9 @@ export async function GET(
         return new NextResponse(webStream, {
             headers: {
                 "Content-Type": "application/pdf",
-                "Content-Length": document.size.toString(),
-                "Content-Disposition": `inline; filename="${document.name}"`,
-                "Cache-Control": "public, max-age=3600",
+                "Content-Length": fileMetadata.length.toString(),
+                "Content-Disposition": `inline; filename="${encodeURIComponent(document.name)}"`,
+                "Cache-Control": "private, max-age=3600",
             },
         });
 

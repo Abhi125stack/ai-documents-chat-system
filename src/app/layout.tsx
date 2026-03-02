@@ -3,27 +3,33 @@ import { Inter } from "next/font/google";
 import QueryProvider from "@/providers/QueryProvider";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "AI Document Chat System",
   description: "Chat with your documents using AI",
   icons: {
-    icon: "/icon.svg",
+    icon: "/assets/icon.svg",
   },
 };
 
+import { ThemeProvider } from "@/providers/ThemeProvider";
 import { LayoutProps } from "@/types";
 
 export default function RootLayout({
   children,
 }: LayoutProps) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} bg-black text-white antialiased`}>
-        <QueryProvider>
-          {children}
-        </QueryProvider>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className={`${inter.className} bg-background text-foreground antialiased`}>
+        <ThemeProvider>
+          <QueryProvider>
+            {children}
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

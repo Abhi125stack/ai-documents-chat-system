@@ -12,7 +12,7 @@ export function AuthCard({
   return (
     <div
       className={cn(
-        "relative rounded-3xl bg-neutral-900/40 backdrop-blur-3xl border border-neutral-800/50 shadow-2xl shadow-blue-700/20 p-8 pt-6 ",
+        "relative rounded-3xl bg-[#111927]/40 backdrop-blur-3xl border border-slate-800/50 shadow-2xl p-8 pt-6 ",
         className
       )}
     >

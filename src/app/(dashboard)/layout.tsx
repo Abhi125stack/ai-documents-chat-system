@@ -15,14 +15,14 @@ export default function DashboardLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a1120] flex items-center justify-center">
+        <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0a1120] text-slate-100 overflow-x-hidden font-sans">
+      <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden font-sans">
       {/* Background Glows (consistent with Auth) */}
       <div className="fixed top-0 left-1/4 w-125 h-125 bg-blue-600/10 blur-[120px] rounded-full pointer-events-none transition-all duration-1000 z-0" />
       <div className="fixed bottom-0 right-1/4 w-100 h-100 bg-indigo-600/10 blur-[100px] rounded-full pointer-events-none transition-all duration-1000 z-0" />

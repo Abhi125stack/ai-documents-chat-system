@@ -2,16 +2,39 @@
 
 @theme {
   --font-sans: "Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif";
+  --color-background: rgb(var(--background));
+    --color-foreground: rgb(var(--foreground));
+    --color-card: rgb(var(--card));
+    --color-border: rgb(var(--border));
+    --color-primary: rgb(var(--primary));
 }
 
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
+  --background: 255 255 255;
+    /* White background */
+    --foreground: 0 0 0;
+    /* Black text */
+    --card: 245 245 245;
+    /* Light gray card */
+    --border: 220 220 220;
+    /* Lighter gray border */
+    --primary: 37 99 235;
+    /* Blue primary (bg-blue-600 equivalent) */
+    font-size: 90%;
+    /* Scale down the whole UI by 10% */
 }
 
 .dark {
-  --background: #000000;
-  --foreground: #ffffff;
+  --background: 10 17 32;
+    /* Dark bluish background (#0a1120 equivalent, like original auth layout) */
+    --foreground: 255 255 255;
+    /* White text */
+    --card: 17 25 39;
+    /* Slightly lighter bluish card (#111927 roughly) */
+    --border: 30 41 59;
+    /* Slate-800 border */
+    --primary: 59 130 246;
+    /* Blue primary (bg-blue-500 equivalent) */
 }
 
 body {

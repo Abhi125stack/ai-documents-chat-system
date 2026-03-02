@@ -19,8 +19,8 @@ export const ChatHistoryList: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-        <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
-        <p className="text-gray-500 font-medium">Fetching your chat history...</p>
+            <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+            <p className="text-foreground/50 font-medium text-sm">Fetching your chat history...</p>
       </div>
     );
   }
@@ -28,11 +28,11 @@ export const ChatHistoryList: React.FC = () => {
   if (chats.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in duration-700">
-        <div className="w-20 h-20 rounded-3xl bg-white/3 flex items-center justify-center mb-6 border border-white/5">
-          <MessageSquare className="w-10 h-10 text-gray-600" />
+            <div className="w-20 h-20 rounded-3xl bg-card border border-border flex items-center justify-center mb-6">
+                <MessageSquare className="w-10 h-10 text-foreground/30" />
         </div>
-        <h3 className="text-xl font-bold text-white mb-2">No conversations yet</h3>
-        <p className="text-gray-400 max-w-sm mx-auto leading-relaxed">
+            <h3 className="text-xl font-bold text-foreground mb-2">No conversations yet</h3>
+            <p className="text-foreground/50 max-w-sm mx-auto leading-relaxed text-sm">
           Start a new conversation by opening any of your documents and clicking the "Chat" button.
         </p>
       </div>
@@ -52,48 +52,48 @@ export const ChatHistoryList: React.FC = () => {
             <Link
               href={href}
               key={chat._id}
-              className="group relative flex items-center p-5 rounded-3xl bg-[#111927]/40 border border-white/5 hover:border-indigo-500/40 hover:bg-[#1a2333]/80 transition-all duration-300 hover:shadow-indigo-500/10 cursor-pointer overflow-hidden"
+                  className="group relative flex items-center p-5 rounded-3xl bg-card border border-border hover:border-primary/40 hover:bg-card/80 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 cursor-pointer overflow-hidden shadow-sm"
             >
               {/* Left Icon Accent */}
-              <div className="w-12 h-12 rounded-2xl bg-indigo-600/10 flex items-center justify-center mr-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:shadow-indigo-500/30">
-                <MessageSquare className="w-6 h-6 text-indigo-500 group-hover:text-white transition-colors" />
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mr-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary group-hover:shadow-lg group-hover:shadow-primary/30">
+                      <MessageSquare className="w-6 h-6 text-primary group-hover:text-background transition-colors" />
               </div>
 
               <div className="flex-1 min-w-0 pr-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] uppercase font-black text-indigo-400 tracking-widest px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20">
+                          <span className="text-[10px] uppercase font-black text-primary tracking-widest px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
                     {isMultiDoc ? "MULTI-SESSION" : "AI SESSION"}
                   </span>
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                          <span className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
                     {new Date(chat.createdAt).toLocaleDateString()}
                   </span>
                 </div>
                 
-                <h3 className="text-sm font-bold text-white group-hover:text-indigo-400 truncate transition-colors tracking-tight">
+                      <h3 className="text-sm font-bold text-foreground group-hover:text-primary truncate transition-colors tracking-tight">
                   {isMultiDoc ? (
                     "Conversation on: Multiple docs"
                   ) : (
-                    <>Conversation on: <span className="text-gray-300 font-medium">{chat?.documentId?.name || "Deleted Document"}</span></>
+                                  <>Conversation on: <span className="text-foreground/80 font-medium">{chat?.documentId?.name || "Deleted Document"}</span></>
                   )}
                 </h3>
                 
-                <p className="text-xs text-gray-500 truncate mt-1 italic">
+                      <p className="text-xs text-foreground/50 truncate mt-1 italic">
                   {chat.messages.length > 0 ? `"${chat.messages[chat.messages.length - 1].content.substring(0, 100)}..."` : "No messages yet"}
                 </p>
               </div>
 
               <div className="flex items-center gap-4">
                  <div className="hidden sm:flex flex-col items-end text-right">
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 flex items-center gap-1">
+                          <span className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest mb-1 flex items-center gap-1">
                       <FileText className="w-3 h-3" />
                       {isMultiDoc ? "Collective Context" : "Source Asset"}
                     </span>
-                    <span className="text-[10px] text-gray-400 font-medium truncate max-w-30">
+                          <span className="text-[10px] text-foreground/60 font-medium truncate max-w-30">
                       {isMultiDoc ? `${chat.documentIds?.length} Assets` : (chat?.documentId?.name || "Unknown")}
                     </span>
                  </div>
-                 <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-indigo-400 transition-all transform group-hover:translate-x-1" />
+                      <ChevronRight className="w-5 h-5 text-foreground/30 group-hover:text-primary transition-all transform group-hover:translate-x-1" />
               </div>
             </Link>
           );

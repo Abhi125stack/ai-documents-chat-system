@@ -16,7 +16,26 @@ export async function connectDB() {
     if (cached.conn) return cached.conn;
 
     if (!cached.promise) {
-        cached.promise = mongoose.connect(MONGODB_URI).then((mongoose) => mongoose);
+        const opts = {
+            bufferCommands: false,
+            maxPoolSize: 10,
+        };
+        cached.promise = mongoose.connect(MONGODB_URI, opts).then(async (m) => {
+            // CRITICAL: GridFS requires an index on { files_id: 1, n: 1 } to stream files 
+            // larger than 32MB. Without this, MongoDB hits a 'Sort exceeded memory limit' 
+            // error and drops the connection (leading to net::ERR_EMPTY_RESPONSE).
+            try {
+                const db = m.connection.db;
+                if (db) {
+                    await db.collection("documents.chunks").createIndex({ files_id: 1, n: 1 }, { unique: true });
+                    console.log("✅ GridFS performance indices verified.");
+                }
+            } catch (e) {
+                // Ignore if indices already exist or if permission restricted
+                console.warn("GridFS Index check:", e);
+            }
+            return m;
+        });
     }
 
     cached.conn = await cached.promise;

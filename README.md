@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Document Chat System 🚀
 
-## Getting Started
+A high-performance, full-stack application designed for seamless interaction with PDF documents using advanced AI. Upload, view, and chat with your files through a sophisticated Retrieval Augmented Generation (RAG) pipeline.
 
-First, run the development server:
+---
 
+## 🌟 Project Overview
+
+This platform transforms static PDFs into interactive intelligence. By combining a premium user interface with a robust backend, users can upload multiple documents, visualize them with high precision, and engage in meaningful conversations with an AI that understands the local context of their files.
+
+---
+
+## ✨ Core Features
+
+### 🔐 Authentication & Session Lifecycle
+- **Secure Auth**: Robust JWT-based authentication system.
+- **Silent Refresh**: Automated session extension using refresh tokens for a seamless user experience.
+- **Protected Routes**: Middleware and custom hooks (`useAuthGuard`) to secure sensitive data.
+- **Premium UI**: Sleek Login and Signup flows with framer-motion animations.
+
+### 📄 PDF Upload & Processing
+- **GridFS Integration**: Large files are handled efficiently using MongoDB's GridFS.
+- **Immediate Extraction**: Real-time text extraction using synchronized PDF.js workers.
+- **Stateful Processing**: Visual indicators for `processing`, `processed`, and `error` states.
+- **Intelligent Chunking**: Automated document splitting for optimized AI context.
+
+### 🖼️ High-Performance PDF Viewer
+- **Virtual Rendering**: Uses `react-window` to render only visible pages, allowing for massive documents without lag.
+- **Interactive Controls**: Deep zoom (50% - 300%), direct page jumping, and a dynamic thumbnail sidebar.
+- **Brand Consistency**: Premium dark-mode aesthetics with custom glassmorphism effects.
+
+### 🤖 AI Document Chat System
+- **RAG Architecture**: Semantic search using OpenAI's `text-embedding-3-small` for relevant context retrieval.
+- **OpenRouter Integration**: Access to state-of-the-art LLMs (GPT-3.5-Turbo/GPT-4) with reliable fallback mechanisms.
+- **Conversational Memory**: Full chat history persistence linked to specific document contexts.
+
+---
+
+## 🛠️ Tech Stack & Architectural Decisions
+
+### Application Architecture
+Built on **Next.js 16** with the **App Router**, following a strict separation of concerns:
+- **`src/app`**: API routes and page layouts.
+- **`src/models`**: Mongoose schemas for Users, Documents, Chunks, and Chats.
+- **`src/shared`**: Reusable hooks and UI components.
+- **`src/lib`**: Core utilities for Auth, Database, and JWT.
+
+### PDF Processing Strategy
+We utilize a **version-synchronized worker strategy** to prevent API mismatches common in modern Node environments. By locking `pdfjs-dist` to the exact version required by our parser (`5.4.296`), we ensure 100% reliable text extraction on both local and production environments.
+
+### AI Chat System Design
+The system uses **Cosine Similarity** for vector matching. Even if embeddings fail to generate, a robust **keyword-search fallback** ensures the assistant always has context to provide answers.
+
+### State Management Strategy
+We chose **TanStack Query** (React Query) over Redux for state management due to the following architectural advantages:
+- **Server State vs. Client State**: Redux is designed for global client state, but 90% of this application's state (documents, chats, session data) is **Server State**. TanStack Query is purpose-built to handle caching, background refetching, and synchronization with the backend.
+- **Boilerplate Elimination**: TanStack Query removes the need for complex actions, reducers, and thunks, allowing us to keep the codebase clean and focused on feature logic.
+- **Built-in Async Lifecycle**: Features like `isLoading`, `isError`, and `status` are provided natively, ensuring consistent UI states without manual state tracking.
+- **Optimistic UI Engine**: Our chat interface relies on TanStack Query's mutation API to provide instant feedback while handling server confirmation in the background.
+
+---
+
+## 📈 Error Handling & Resilience
+
+- **Atomic Uploads**: If one file in a batch fails, the others continue processing.
+- **Database Safety**: Mongoose validation and error-aware service layers prevent data corruption.
+- **Client Resilience**: Global error boundaries and toast notifications (Sonner) provide clear user feedback.
+
+---
+
+## 🚀 Setup & Installation
+
+### 1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <your-repo-url>
+cd ai-documents-chat-system
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install dependencies
+```bash
+npm install --legacy-peer-deps
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Environment Variables
+Create a `.env.local` file in the root directory and add the following:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Description |
+| :--- | :--- |
+| `MONGODB_URI` | Your MongoDB connection string |
+| `JWT_SECRET` | Secret key for access tokens |
+| `JWT_REFRESH_SECRET` | Secret key for refresh tokens |
+| `OPENROUTER_AI_SECRET_KEY` | Your OpenRouter/OpenAI API key |
+| `NEXT_PUBLIC_APP_URL` | http://localhost:3000 |
 
-## Learn More
+### 4. Run Development Server
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔮 Future Improvements
+- [ ] Multi-document cross-referencing in a single chat session.
+- [ ] Support for OCR on scanned PDFs.
+- [ ] Collaborative document workspaces for teams.
+- [ ] Exportable AI summaries and citations.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
