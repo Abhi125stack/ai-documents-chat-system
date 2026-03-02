@@ -2,6 +2,7 @@
 
 import { DashboardHeader } from '@/shared/components/DashboardHeader';
 import { useAuthGuard } from '@/shared/hooks/useAuthGuard';
+import { usePathname } from 'next/navigation';
 
 export default function DashboardLayout({
   children,
@@ -9,6 +10,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { isLoading } = useAuthGuard(true);
+    const pathname = usePathname();
+    const isDocView = pathname.includes('/doc-view/');
 
   if (isLoading) {
     return (
@@ -25,11 +28,11 @@ export default function DashboardLayout({
       <div className="fixed bottom-0 right-1/4 w-100 h-100 bg-indigo-600/10 blur-[100px] rounded-full pointer-events-none transition-all duration-1000 z-0" />
 
       {/* Main Header (Now includes navigation) */}
-      <DashboardHeader />
+          {!isDocView && <DashboardHeader />}
 
       {/* Dynamic Page Content */}
-      <main className="relative flex-1 p-4 md:p-8 overflow-y-auto">
-        <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+          <main className={`relative flex-1 overflow-y-auto ${isDocView ? 'p-0' : 'p-4 md:p-8'}`}>
+              <div className={`${isDocView ? 'w-full h-full' : 'max-w-7xl mx-auto'} animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out`}>
           {children}
         </div>
       </main>

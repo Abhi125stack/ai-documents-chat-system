@@ -1,0 +1,217 @@
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/mongodb";
+import Chat from "@/models/Chat";
+import Document from "@/models/Document";
+import DocumentChunk from "@/models/DocumentChunk";
+import { getUserIdFromHeader } from "@/lib/auth";
+import { OpenRouter } from '@openrouter/sdk';
+import mongoose from "mongoose";
+import OpenAI from "openai";
+
+const openRouter = new OpenRouter({
+    apiKey: process.env.OPENROUTER_AI_SECRET_KEY || '',
+    httpReferer: "http://localhost:3000",
+    xTitle: "AI Documents Chat System",
+});
+
+const openai = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_AI_SECRET_KEY || '',
+});
+
+// Helper for Cosine Similarity
+function cosineSimilarity(vecA: number[], vecB: number[]): number {
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    for (let i = 0; i < vecA.length; i++) {
+        dotProduct += vecA[i] * vecB[i];
+        normA += vecA[i] * vecA[i];
+        normB += vecB[i] * vecB[i];
+    }
+    if (normA === 0 || normB === 0) return 0;
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+export async function POST(req: Request) {
+    try {
+        await connectDB();
+        const userId = getUserIdFromHeader(req);
+        if (!userId) {
+            return NextResponse.json({ message: "Unauthorized", success: false }, { status: 401 });
+        }
+
+        const body = await req.json();
+        const { docId, docIds, content } = body;
+
+        // Support both single and multiple IDs
+        const targetIds = docIds || (docId ? [docId] : null);
+
+        if (!targetIds || !Array.isArray(targetIds) || targetIds.length === 0 || !content) {
+            return NextResponse.json({ message: "docIds and content are required.", success: false }, { status: 400 });
+        }
+
+        // Validate all IDs are valid ObjectIds before querying
+        const invalidIds = targetIds.filter(id => !mongoose.Types.ObjectId.isValid(id));
+        if (invalidIds.length > 0) {
+            return NextResponse.json({ message: `Invalid ID format detected: ${invalidIds.join(', ')}`, success: false }, { status: 400 });
+        }
+
+        // 1. Verify documents exist and belong to user
+        const documents = await Document.find({ _id: { $in: targetIds }, userId });
+        if (documents.length === 0) {
+            return NextResponse.json({ message: "Documents not found or access denied.", success: false }, { status: 404 });
+        }
+
+        // 2. Extract embedding for the user's question
+        let questionEmbedding: number[] | null = null;
+        try {
+            const embedRes = await openai.embeddings.create({
+                model: "text-embedding-3-small",
+                input: content,
+            });
+            questionEmbedding = embedRes.data[0].embedding;
+        } catch (err) {
+            console.log("Failed to generate embedding for user question, falling back to keyword search.", err);
+        }
+
+        // 3. Fetch chunks for target documents
+        const objectIds = targetIds.map((id: string) =>
+            new mongoose.Types.ObjectId(id)
+        );
+
+        const allChunks = await DocumentChunk.find(
+            { documentId: { $in: objectIds } }
+        );
+        console.log("All chunks:", allChunks.length);
+        
+        // 4. Score and select top relevant chunks
+        let topChunks = [];
+        
+        if (questionEmbedding && allChunks.some((c: any) => c.embedding && c.embedding.length > 0)) {
+            // Semantic Search using Cosine Similarity
+            const scoredChunks = allChunks.map((chunk: any) => {
+                const score = (chunk.embedding && chunk.embedding.length > 0) 
+                    ? cosineSimilarity(questionEmbedding!, chunk.embedding)
+                    : 0;
+                return { text: chunk.text, score };
+            });
+            
+            // Sort by highest similarity
+            scoredChunks.sort((a: any, b: any) => b.score - a.score);
+            
+            // Pick top 5 chunks
+            topChunks = scoredChunks.slice(0, 5).map((c: any) => c.text);
+        } else {
+            // Fallback: Basic Keyword Search
+            const searchTerms = content.toLowerCase().split(/\s+/).filter((word: string) => word.length > 3);
+            const scoredChunks = allChunks.map((chunk: any) => {
+                let score = 0;
+                const chunkText = chunk.text.toLowerCase();
+                for (const term of searchTerms) {
+                    if (chunkText.includes(term)) score++;
+                }
+                return { text: chunk.text, score };
+            });
+            
+            // Sort by highest occurrence matches
+            scoredChunks.sort((a: any, b: any) => b.score - a.score);
+            
+            // Pick top 5 chunks
+            topChunks = scoredChunks.slice(0, 5).map((c: any) => c.text);
+        }
+
+        const excerpts = topChunks.length > 0 
+            ? topChunks.join("\n\n---\n\n") 
+            : "No specific excerpts available.";
+
+        const systemPrompt = {
+            role: "system",
+            content: `You are an AI assistant answering strictly from the provided document excerpts.
+If the answer is not found in the excerpts, say you could not find it.
+
+Document Excerpts:
+${excerpts}`
+        };
+
+        // 5. Find or create Chat
+        let chat;
+        if (targetIds.length === 1) {
+            chat = await Chat.findOne({ userId, documentId: targetIds[0] });
+        } else {
+            chat = await Chat.findOne({ 
+                userId, 
+                documentIds: { $size: targetIds.length, $all: targetIds } 
+            });
+        }
+
+        if (!chat) {
+            chat = new Chat({
+                userId,
+                ...(targetIds.length === 1 ? { documentId: targetIds[0] } : { documentIds: targetIds }),
+                messages: [],
+            });
+        }
+
+        // 6. Prepare message history for OpenAI
+        const messageHistory = chat.messages.map((msg: any) => ({
+            role: msg.role,
+            content: msg.content,
+        }));
+
+        // 7. Get response from OpenRouter
+        let aiResponse;
+        try {
+            if (!process.env.OPENROUTER_AI_SECRET_KEY) {
+                throw new Error("Missing AI API key in environment variables.");
+            }
+
+            const completion = await openRouter.chat.send({
+                chatGenerationParams: {
+                    model: 'openai/gpt-3.5-turbo', 
+                    messages: [systemPrompt, ...messageHistory, { role: "user", content: content }] as any,
+                    stream: false,
+                }
+            });
+
+            aiResponse = completion.choices[0].message.content;
+            console.log("AI Response:", completion.choices);
+        } catch (openAiError: any) {
+            console.error("AI API ERROR:", openAiError);
+            return NextResponse.json({ 
+                message: "AI Gateway error.", 
+                error: openAiError.message, 
+                success: false 
+            }, { status: 502 }); 
+        }
+
+        // 8. Update Chat history
+        chat.messages.push({
+            role: "user",
+            content,
+            createdAt: new Date(),
+        });
+        chat.messages.push({
+            role: "assistant",
+            content: aiResponse,
+            createdAt: new Date(),
+        });
+
+        await chat.save();
+
+        return NextResponse.json({
+            message: "Response generated successfully!",
+            success: true,
+            aiResponse,
+            chat,
+        }, { status: 200 });
+
+    } catch (err: any) {
+        console.error("ROOT Chat with AI error:", err);
+        return NextResponse.json({ 
+            message: "A critical error occurred in the chat processing system.", 
+            error: err.message, 
+            success: false 
+        }, { status: 500 });
+    }
+}

@@ -64,7 +64,7 @@ export default function SignupForm() {
             <Button 
                 type="submit"
                 disabled={isSigningUp}
-                className="w-full h-14 mt-4 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-bold text-base shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50 gap-2 border-none"
+                className="w-full cursor-pointer h-14 mt-4 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-bold text-base shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50 gap-2 border-none"
             >
                 {isSigningUp ? (
                     <>

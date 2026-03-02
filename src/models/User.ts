@@ -1,4 +1,13 @@
-import mongoose from "mongoose";
+import mongoose, { Document } from "mongoose";
+
+export interface IUser extends Document {
+    name: string;
+    email: string;
+    password?: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 
 const UserSchema = new mongoose.Schema(
     {
@@ -28,4 +37,4 @@ const UserSchema = new mongoose.Schema(
 );
 
 // Check if model exists to prevent re-compilation (Next.js hot reloading)
-export default mongoose.models.User || mongoose.model("User", UserSchema);
+export default mongoose.models.User || mongoose.model<IUser>("User", UserSchema);

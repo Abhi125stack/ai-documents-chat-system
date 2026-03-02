@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
-import { generateToken } from "@/lib/jwt";
+import { generateToken, generateRefreshToken } from "@/lib/jwt";
 
 export async function POST(req: Request) {
     try {
@@ -37,10 +37,11 @@ export async function POST(req: Request) {
             );
         }
 
-        // 5. Generate token if login successful
-        const token = generateToken(user._id.toString());
+        // 5. Generate tokens if login successful
+        const accessToken = generateToken(user._id.toString());
+        const refreshToken = generateRefreshToken(user._id.toString());
 
-        // 6. Return user info and token
+        // 6. Return user info and tokens
         return NextResponse.json(
             {
                 message: "Login successful!",
@@ -50,7 +51,8 @@ export async function POST(req: Request) {
                     name: user.name,
                     email: user.email,
                 },
-                token,
+                token: accessToken,
+                refreshToken: refreshToken,
             },
             { status: 200 }
         );

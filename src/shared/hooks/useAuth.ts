@@ -3,16 +3,7 @@ import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-interface AuthResponse {
-  message: string;
-  success: boolean;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  token: string;
-}
+import { AuthResponse, LoginCredentials, SignupData } from "@/types";
 
 export const useAuth = () => {
   const router = useRouter();
@@ -20,13 +11,16 @@ export const useAuth = () => {
 
   // Login Mutation
   const loginMutation = useMutation({
-    mutationFn: async (credentials: any) => {
+      mutationFn: async (credentials: LoginCredentials) => {
       const response = await api.post<AuthResponse>("/auth/login", credentials);
       return response.data;
     },
     onSuccess: (data) => {
       if (data.success) {
         localStorage.setItem("token", data.token);
+          if (data.refreshToken) {
+              localStorage.setItem("refreshToken", data.refreshToken);
+          }
         localStorage.setItem("user", JSON.stringify(data.user));
         toast.success(data.message || "Welcome back!");
         router.push("/dashboard");
@@ -41,13 +35,16 @@ export const useAuth = () => {
 
   // Signup Mutation
   const signupMutation = useMutation({
-    mutationFn: async (userData: any) => {
+      mutationFn: async (userData: SignupData) => {
       const response = await api.post<AuthResponse>("/auth/signup", userData);
       return response.data;
     },
     onSuccess: (data) => {
       if (data.success) {
         localStorage.setItem("token", data.token);
+          if (data.refreshToken) {
+              localStorage.setItem("refreshToken", data.refreshToken);
+          }
         localStorage.setItem("user", JSON.stringify(data.user));
         toast.success(data.message || "Account created successfully!");
         router.push("/dashboard");
@@ -63,6 +60,7 @@ export const useAuth = () => {
   // Logout Function
   const logout = () => {
     localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     toast.info("Logged out successfully.");
     router.push("/login");

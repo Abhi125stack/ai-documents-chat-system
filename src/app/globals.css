@@ -21,3 +21,30 @@ body {
 }
 
 
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    margin-block: 12px;
+    /* Keeps scrollbar away from top/bottom rounded corners */
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 20px;
+    border: 2px solid transparent;
+    /* Creates an inset effect */
+    background-clip: padding-box;
+    /* Clips the background to stay inside the border */
+    transition: all 0.3s;
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(59, 130, 246, 0.3);
+    background-clip: padding-box;
+  }
+}

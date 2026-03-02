@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
-import { generateToken } from "@/lib/jwt";
+import { generateToken, generateRefreshToken } from "@/lib/jwt";
 
 export async function POST(req: Request) {
     try {
@@ -36,10 +36,11 @@ export async function POST(req: Request) {
             password: hashedPassword,
         });
 
-        // 5. Generate token
-        const token = generateToken(newUser._id.toString());
+        // 5. Generate tokens
+        const accessToken = generateToken(newUser._id.toString());
+        const refreshToken = generateRefreshToken(newUser._id.toString());
 
-        // 6. Respond with token and user data
+        // 6. Respond with tokens and user data
         return NextResponse.json(
             {
                 message: "Account created successfully!",
@@ -49,7 +50,8 @@ export async function POST(req: Request) {
                     name: newUser.name,
                     email: newUser.email,
                 },
-                token,
+                token: accessToken,
+                refreshToken: refreshToken,
             },
             { status: 201 }
         );
